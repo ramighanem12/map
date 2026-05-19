@@ -2,6 +2,44 @@ import { defineConfig, type Plugin } from 'vite'
 import { URL } from 'node:url'
 import react from '@vitejs/plugin-react'
 
+function isExpandedAppleMapsUrl(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '').toLowerCase() === 'maps.apple.com'
+  } catch {
+    return false
+  }
+}
+
+async function resolveAppleMapsShortLink(url: URL) {
+  const requestHeaders = {
+    accept: 'text/html,application/xhtml+xml',
+    'user-agent': 'Mozilla/5.0 AppleMapsToGoogleMaps/1.0',
+  }
+
+  const manualResponse = await fetch(url, {
+    headers: requestHeaders,
+    method: 'HEAD',
+    redirect: 'manual',
+  })
+  const manualLocation = manualResponse.headers.get('location')
+
+  if (manualLocation && isExpandedAppleMapsUrl(manualLocation)) {
+    return manualLocation
+  }
+
+  const followedResponse = await fetch(url, {
+    headers: requestHeaders,
+    method: 'GET',
+    redirect: 'follow',
+  })
+
+  if (isExpandedAppleMapsUrl(followedResponse.url)) {
+    return followedResponse.url
+  }
+
+  return ''
+}
+
 function appleMapsResolver(): Plugin {
   return {
     name: 'apple-maps-resolver',
@@ -26,11 +64,7 @@ function appleMapsResolver(): Plugin {
             return
           }
 
-          const resolved = await fetch(parsedUrl, {
-            method: 'HEAD',
-            redirect: 'manual',
-          })
-          const finalUrl = resolved.headers.get('location')
+          const finalUrl = await resolveAppleMapsShortLink(parsedUrl)
 
           if (!finalUrl) {
             response.statusCode = 502

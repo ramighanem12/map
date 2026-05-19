@@ -1,3 +1,41 @@
+function isExpandedAppleMapsUrl(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '').toLowerCase() === 'maps.apple.com'
+  } catch {
+    return false
+  }
+}
+
+async function resolveAppleMapsShortLink(url) {
+  const requestHeaders = {
+    accept: 'text/html,application/xhtml+xml',
+    'user-agent': 'Mozilla/5.0 AppleMapsToGoogleMaps/1.0',
+  }
+
+  const manualResponse = await fetch(url, {
+    headers: requestHeaders,
+    method: 'HEAD',
+    redirect: 'manual',
+  })
+  const manualLocation = manualResponse.headers.get('location')
+
+  if (manualLocation && isExpandedAppleMapsUrl(manualLocation)) {
+    return manualLocation
+  }
+
+  const followedResponse = await fetch(url, {
+    headers: requestHeaders,
+    method: 'GET',
+    redirect: 'follow',
+  })
+
+  if (isExpandedAppleMapsUrl(followedResponse.url)) {
+    return followedResponse.url
+  }
+
+  return ''
+}
+
 export default async function handler(request, response) {
   const requestUrl = new URL(request.url, `https://${request.headers.host}`)
   const appleUrl = requestUrl.searchParams.get('url')
@@ -18,11 +56,7 @@ export default async function handler(request, response) {
       return
     }
 
-    const resolved = await fetch(parsedUrl, {
-      method: 'HEAD',
-      redirect: 'manual',
-    })
-    const finalUrl = resolved.headers.get('location')
+    const finalUrl = await resolveAppleMapsShortLink(parsedUrl)
 
     if (!finalUrl) {
       response.status(502).json({ error: 'Apple did not return an expanded Maps URL' })

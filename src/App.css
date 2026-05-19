@@ -142,6 +142,16 @@ button:hover {
   background: #dce6df;
 }
 
+.copy-button-copying {
+  color: #17201a;
+  background: #dce6df;
+  cursor: wait;
+}
+
+.copy-button-copying:hover {
+  background: #dce6df;
+}
+
 .copy-button-copied {
   color: #ffffff;
   background: #14532d;
@@ -158,6 +168,21 @@ button:hover {
 
 .copy-button-error:hover {
   background: #8a2c1c;
+}
+
+.copy-status {
+  min-height: 24px;
+  margin: 0;
+  color: #5b655f;
+  font-weight: 700;
+}
+
+.copy-status-copied {
+  color: #14532d;
+}
+
+.copy-status-error {
+  color: #8a2c1c;
 }
 
 .result-error {

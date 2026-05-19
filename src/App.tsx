@@ -177,7 +177,7 @@ async function convertAppleMapsUrl(value: string): Promise<ConversionResult> {
 
 function App() {
   const [appleUrl, setAppleUrl] = useState('')
-  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
+  const [copyState, setCopyState] = useState<'idle' | 'copying' | 'copied' | 'error'>('idle')
   const [result, setResult] = useState<ConversionResult>({
     status: 'empty',
     message: 'Paste an Apple Maps URL.',
@@ -206,6 +206,8 @@ function App() {
 
   async function handleCopy() {
     if (result.status === 'ready') {
+      setCopyState('copying')
+
       try {
         await navigator.clipboard.writeText(result.googleUrl)
         setCopyState('copied')
@@ -249,10 +251,23 @@ function App() {
                 className={`copy-button copy-button-${copyState}`}
                 type="button"
                 onClick={handleCopy}
-                disabled={!canCopy}
+                disabled={!canCopy || copyState === 'copying'}
               >
-                {copyState === 'copied' ? 'Copied' : copyState === 'error' ? 'Copy failed' : 'Copy URL'}
+                {copyState === 'copying'
+                  ? 'Copying...'
+                  : copyState === 'copied'
+                    ? 'Copied'
+                    : copyState === 'error'
+                      ? 'Copy failed'
+                      : 'Copy URL'}
               </button>
+              <p className={`copy-status copy-status-${copyState}`} aria-live="polite">
+                {copyState === 'copied'
+                  ? 'Copied to clipboard.'
+                  : copyState === 'error'
+                    ? 'Clipboard blocked. Select the URL above and copy it manually.'
+                    : ''}
+              </p>
             </>
           ) : (
             <p>{result.message}</p>

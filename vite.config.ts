@@ -30,7 +30,13 @@ function appleMapsResolver(): Plugin {
             method: 'HEAD',
             redirect: 'manual',
           })
-          const finalUrl = resolved.headers.get('location') ?? parsedUrl.toString()
+          const finalUrl = resolved.headers.get('location')
+
+          if (!finalUrl) {
+            response.statusCode = 502
+            response.end(JSON.stringify({ error: 'Apple did not return an expanded Maps URL' }))
+            return
+          }
 
           response.setHeader('content-type', 'application/json')
           response.end(JSON.stringify({ finalUrl }))

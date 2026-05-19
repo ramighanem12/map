@@ -134,12 +134,11 @@ function convertExpandedAppleMapsUrl(normalized: string): ConversionResult {
 
 async function resolveShortAppleMapsUrl(normalized: string) {
   const response = await fetch(`/api/resolve-apple-maps?url=${encodeURIComponent(normalized)}`)
+  const payload = (await response.json().catch(() => ({}))) as { error?: string; finalUrl?: string }
 
   if (!response.ok) {
-    throw new Error('Could not expand that Apple Maps short link.')
+    throw new Error(payload.error ?? 'Could not expand that Apple Maps short link.')
   }
-
-  const payload = (await response.json()) as { finalUrl?: string }
 
   if (!payload.finalUrl) {
     throw new Error('That Apple Maps short link did not return a destination.')

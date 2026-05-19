@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import './App.css'
 
@@ -177,14 +177,26 @@ async function convertAppleMapsUrl(value: string): Promise<ConversionResult> {
 
 function App() {
   const [appleUrl, setAppleUrl] = useState('')
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'error'>('idle')
   const [result, setResult] = useState<ConversionResult>({
     status: 'empty',
     message: 'Paste an Apple Maps URL.',
   })
   const canCopy = useMemo(() => result.status === 'ready', [result.status])
 
+  useEffect(() => {
+    if (copyState === 'idle') {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => setCopyState('idle'), 2000)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [copyState])
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setCopyState('idle')
     setResult({
       status: 'loading',
       message: 'Converting...',
@@ -192,9 +204,14 @@ function App() {
     setResult(await convertAppleMapsUrl(appleUrl))
   }
 
-  function handleCopy() {
+  async function handleCopy() {
     if (result.status === 'ready') {
-      void navigator.clipboard.writeText(result.googleUrl)
+      try {
+        await navigator.clipboard.writeText(result.googleUrl)
+        setCopyState('copied')
+      } catch {
+        setCopyState('error')
+      }
     }
   }
 
@@ -228,8 +245,13 @@ function App() {
               <a className="result-url" href={result.googleUrl}>
                 {result.googleUrl}
               </a>
-              <button className="copy-button" type="button" onClick={handleCopy} disabled={!canCopy}>
-                Copy URL
+              <button
+                className={`copy-button copy-button-${copyState}`}
+                type="button"
+                onClick={handleCopy}
+                disabled={!canCopy}
+              >
+                {copyState === 'copied' ? 'Copied' : copyState === 'error' ? 'Copy failed' : 'Copy URL'}
               </button>
             </>
           ) : (

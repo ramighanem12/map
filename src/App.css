@@ -142,6 +142,24 @@ button:hover {
   background: #dce6df;
 }
 
+.copy-button-copied {
+  color: #ffffff;
+  background: #14532d;
+}
+
+.copy-button-copied:hover {
+  background: #14532d;
+}
+
+.copy-button-error {
+  color: #ffffff;
+  background: #8a2c1c;
+}
+
+.copy-button-error:hover {
+  background: #8a2c1c;
+}
+
 .result-error {
   border-color: #efb2a6;
   background: #fff8f6;

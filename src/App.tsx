@@ -221,7 +221,6 @@ function App() {
     <main className="app-shell">
       <section className="converter" aria-labelledby="app-title">
         <div className="heading">
-          <p className="eyebrow">Apple to Google Maps</p>
           <h1 id="app-title">Apple to Google Maps</h1>
         </div>
 
